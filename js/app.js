@@ -29,7 +29,11 @@ function getValidCarImages(car) {
 }
 
 function getImageSrc(image) {
-  return image.startsWith('images/') ? encodeURI(image) : image;
+  if (!image.startsWith('images/')) return image;
+  const optimizedImage = image
+    .replace(/^images\//, 'images-optimized/')
+    .replace(/\.(jpe?g|png)$/i, '.webp');
+  return encodeURI(optimizedImage);
 }
 
 function preloadImage(image) {
