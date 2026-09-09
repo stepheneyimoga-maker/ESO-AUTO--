@@ -32,6 +32,13 @@ function getImageSrc(image) {
   return image.startsWith('images/') ? encodeURI(image) : image;
 }
 
+function preloadImage(image) {
+  if (!image) return;
+  const preload = new Image();
+  preload.decoding = 'async';
+  preload.src = getImageSrc(image);
+}
+
 function getCarsWithImages(cars = VEHICLES) {
   return cars.filter(car => getValidCarImages(car).length > 0);
 }
@@ -98,7 +105,7 @@ function renderCarCard(car) {
   const hasImage = !!primaryImage;
 
   const imgHTML = hasImage
-    ? `<img src="${getImageSrc(primaryImage)}" alt="${car.make} ${car.model}" loading="lazy">`
+    ? `<img src="${getImageSrc(primaryImage)}" alt="${car.make} ${car.model}" loading="lazy" decoding="async">`
     : `<div class="placeholder">${CAR_PLACEHOLDER_SVG}<span>Image Coming Soon</span></div>`;
 
   const categoryLabel = car.category === 'luxury' ? 'Luxury' : 'Everyday';
@@ -146,7 +153,8 @@ function renderCarDetail(carId) {
   const mainImageHTML = (idx) => {
     const img = images[idx];
     if (img) {
-      return `<img src="${getImageSrc(img)}" alt="${car.make} ${modelName} - Image ${idx + 1}">`;
+      const priority = idx === 0 ? ' fetchpriority="high"' : '';
+      return `<img src="${getImageSrc(img)}" alt="${car.make} ${modelName} - Image ${idx + 1}" loading="eager" decoding="async"${priority}>`;
     }
     return `<div class="placeholder">${CAR_PLACEHOLDER_SVG.replace('<svg', '<svg style="fill:#ccc"')}<span>Image ${idx + 1}</span></div>`;
   };
@@ -154,9 +162,12 @@ function renderCarDetail(carId) {
   const thumbsHTML = images.length
     ? images.map((img, i) => {
         const isActive = i === 0 ? 'active' : '';
-        return `<div class="gallery-thumb ${isActive}" data-index="${i}" onclick="setGalleryImage(${carId}, ${i})"><img src="${getImageSrc(img)}" alt="Thumb ${i+1}"></div>`;
+        return `<div class="gallery-thumb ${isActive}" data-index="${i}" onclick="setGalleryImage(${carId}, ${i})"><img src="${getImageSrc(img)}" alt="Thumb ${i+1}" loading="lazy" decoding="async"></div>`;
       }).join('')
     : '<div class="gallery-thumb active" data-index="0"><div class="placeholder">' + CAR_PLACEHOLDER_SVG + '<span>No Images</span></div></div>';
+
+  preloadImage(images[0]);
+  preloadImage(images[1]);
 
   return `
     <div class="car-detail">
@@ -232,7 +243,9 @@ function setGalleryImage(carId, index) {
   if (!mainEl) return;
 
   const img = images[index];
-  const imgHTML = `<img src="${getImageSrc(img)}" alt="${car.make} ${car.model} - Image ${index + 1}">`;
+  const nextIndex = (index + 1) % images.length;
+  preloadImage(images[nextIndex]);
+  const imgHTML = `<img src="${getImageSrc(img)}" alt="${car.make} ${car.model} - Image ${index + 1}" loading="eager" decoding="async" fetchpriority="high">`;
 
   mainEl.innerHTML = imgHTML +
     `<button class="gallery-nav-btn prev" onclick="galleryPrev(${carId})">${CHEVRON_LEFT}</button>` +
