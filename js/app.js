@@ -105,7 +105,7 @@ function renderCarCard(car) {
   const hasImage = !!primaryImage;
 
   const imgHTML = hasImage
-    ? `<img src="${getImageSrc(primaryImage)}" alt="${car.make} ${car.model}" loading="lazy" decoding="async">`
+    ? `<img src="${getImageSrc(primaryImage)}" alt="${car.make} ${car.model}" loading="eager" decoding="async" fetchpriority="low">`
     : `<div class="placeholder">${CAR_PLACEHOLDER_SVG}<span>Image Coming Soon</span></div>`;
 
   const categoryLabel = car.category === 'luxury' ? 'Luxury' : 'Everyday';
